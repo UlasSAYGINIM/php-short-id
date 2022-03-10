@@ -5,25 +5,26 @@ namespace kotchuprik\short_id;
 class ShortId
 {
     protected $alphabet;
+    protected $base_len;
 
     public function __construct($alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
     {
         $this->alphabet = $alphabet;
+        $this->base_len = strlen($this->alphabet);
     }
 
     public function encode($input, $neededLength = 0)
     {
         $output = '';
-        $base = strlen($this->alphabet);
         if (is_numeric($neededLength)) {
             $neededLength--;
             if ($neededLength > 0) {
-                $input += pow($base, $neededLength);
+                $input += ($this->base_len ** $neededLength);
             }
         }
-        for ($current = ($input != 0 ? floor(log($input, $base)) : 0); $current >= 0; $current--) {
-            $powed = pow($base, $current);
-            $floored = floor($input / $powed) % $base;
+        for ($current = ($input != 0 ? floor(log($input, $this->base_len)) : 0); $current >= 0; $current--) {
+            $powed = ($this->base_len ** $current);
+            $floored = floor($input / $powed) % $this->base_len;
             $output = $output . substr($this->alphabet, $floored, 1);
             $input = $input - ($floored * $powed);
         }
@@ -34,16 +35,15 @@ class ShortId
     public function decode($input, $neededLength = 0)
     {
         $output = 0;
-        $base = strlen($this->alphabet);
         $length = strlen($input) - 1;
         for ($current = $length; $current >= 0; $current--) {
-            $powed = pow($base, $length - $current);
+            $powed = ($this->base_len ** ($length - $current));
             $output = ($output + strpos($this->alphabet, substr($input, $current, 1)) * $powed);
         }
         if (is_numeric($neededLength)) {
             $neededLength--;
             if ($neededLength > 0) {
-                $output -= pow($base, $neededLength);
+                $output -= $this->base_len ** $neededLength;
             }
         }
 
